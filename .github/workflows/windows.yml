@@ -1,0 +1,31 @@
+# Положите этот файл в репозиторий как: .github/workflows/windows.yml
+name: Build Windows
+
+on:
+  workflow_dispatch:   # запуск вручную кнопкой "Run workflow"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build CLI and GUI
+        run: cargo build --release -p a4e -p a4e-gui
+
+      - name: Collect files
+        shell: bash
+        run: |
+          mkdir dist
+          cp target/release/a4e.exe dist/
+          cp target/release/a4e-gui.exe dist/
+          cp README.md LICENSE NOTICE dist/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AirDrop4E-windows
+          path: dist/
