@@ -39,6 +39,13 @@ jobs:
             -o shells/android/app/src/main/jniLibs \
             build --release -p airdrop-ffi
 
+      # В манифесте указана несуществующая тема (NoTitleBar) - заменяем на NoActionBar
+      - name: Fix manifest theme
+        run: |
+          sed -i 's/Theme.Material.NoTitleBar/Theme.Material.NoActionBar/' \
+            shells/android/app/src/main/AndroidManifest.xml
+          grep -n "style/Theme" shells/android/app/src/main/AndroidManifest.xml
+
       # В репозитории нет gradlew, поэтому берём Gradle напрямую
       - uses: gradle/actions/setup-gradle@v4
         with:
