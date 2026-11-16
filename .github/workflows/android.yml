@@ -1,0 +1,39 @@
+name: Build Android
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk
+
+      - name: Build Rust libs
+        run: |
+          sdkmanager "ndk;26.1.10909125"
+          export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.1.10909125
+          cargo ndk -t arm64-v8a -t armeabi-v7a -t x86_64 \
+            -o shells/android/app/src/main/jniLibs \
+            build --release -p airdrop-ffi
+
+      - name: Build APK
+        working-directory: shells/android
+        run: ./gradlew assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: shells/android/app/build/outputs/apk/debug/*.apk
